@@ -1,10 +1,15 @@
 #include <iostream>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <iostream>
 #include "opencv2/imgproc.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -43,21 +48,88 @@ void MatType( Mat inputMat )
 
 }
 
-static void findPaths(Mat img){
-  int rows = img.rows;
-  int cols = img.cols; 
-  int min = 255;
-  int minIndex = 1;
-  
-  for (int i = 1; i < cols -1; i++){
-    if (img.at<float>(Point(i, 0)) < min){
-      min = img.at<float>(Point(i, 0));
-      minIndex = i;
+
+
+int getMin(int a, int b){
+  if (a < b){
+    return 0;  
+  }else if (a > b){
+    return 1;
+  }else{
+    return 1;
+  }
+}
+
+int getMin(int a, int b, int c){
+  if (a <= b && a <= c){
+    return -1;
+  }
+  if (b <= a && b <= c){
+    return 0;
+  }
+  if (c <= a && c <= b){
+    return 1;
+  }
+}
+
+void greedySeam(Mat& image, Mat& output){
+  int height = image.rows;
+  int width = image.cols;
+  int array[height][width];
+
+  for (int rowNum = 0; height < 50; rowNum++){
+    for (int colNum = 0; width < 50; colNum++){
+      array[rowNum][colNum] = image.at<float>(rowNum, colNum);  
     }
   }
 
+  int path[height];
+  int minNum = 255;
+  int minIndex = 0;
 
+  for (int colNum = 0; colNum < width; colNum++){
+    if (array[0][colNum] < minNum){
+      minIndex = colNum;
+      minNum = array[0][colNum];
+    }
+  }
+  path[0] = minIndex;
+
+  for (int rowNum = 1; rowNum < height; rowNum++){
+    minIndex = path[rowNum - 1];
+    if (path[rowNum - 1] == 0){
+      path[rowNum] = minIndex + getMin(array[rowNum][minIndex], array[rowNum][minIndex + 1]);
+    }else if (path[rowNum - 1] == width){
+      path[rowNum] = minIndex + getMin(array[rowNum][minIndex - 1], array[rowNum][minIndex]);
+    }else{
+      path[rowNum] = minIndex + getMin(array[rowNum][minIndex - 1], array[rowNum][minIndex], array[rowNum][minIndex + 1]);
+    }
+  }
+  
+
+ // for (int i = 0; i < height; i++){
+ //   for (int j = 0; j < width; j++){
+ //     if (path[i] == j){
+ //       cout << "X" << "\t";
+ //     }else{
+ //       cout << array[i][j] << "\t";
+ //     }
+ //   }
+ //   cout << endl;
+ // }
+
+
+  for (int i = 0; i < height; i++){
+    for (int j = 0; j < width; j++){
+      if (j >= path[i]){
+        output.at<float>(i, j) = image.at<float>(i, j + 1);
+      }else{
+        output.at<float>(i, j) = image.at<float>(i, j);
+      }
+    }
+  }
 }
+
 
 
 int main(int argc, char** argv){
@@ -91,8 +163,16 @@ int main(int argc, char** argv){
   srcEdges.convertTo(fMat, CV_32F); 
   MatType(fMat);
   imshow( "blob", fMat);
-  cout << fMat.at<float>(Point(141, 143)) << endl;
-  //findPaths(fmat);
+ 
+  Mat output(fMat.rows, fMat.cols, CV_32F);
+
+  for (int i = 0; i < 100; i++){
+    greedySeam(fMat, output);
+    fMat = output;
+  }
+
+  namedWindow( "blob2", CV_WINDOW_AUTOSIZE);
+  imshow( "blob2", output);
 
   waitKey(0);
 
