@@ -14,19 +14,13 @@
 using namespace cv;
 using namespace std;
 //Global Variables
-Mat src, srcGray, srcBlur, srcEdges;
+Mat src, srcGray, srcBlur, srcEdges, fMat;
 Mat dst;
-char* window_name = "Stuff";
 
 static void CannyThreshold(int, void*){
-  blur( src, srcBlur, Size(3,3) );
-  Canny( srcBlur, srcEdges, 40, 40*3, 3 );
-  dst = Scalar::all(0);
-  src.copyTo( dst, srcEdges);
 }
 
-void MatType( Mat inputMat )
-{
+void MatType( Mat inputMat ){
     int inttype = inputMat.type();
 
     string r, a;
@@ -45,7 +39,6 @@ void MatType( Mat inputMat )
     r += "C";
     r += (chans+'0');
     cout << "Mat is of type " << r << " and should be accessed with " << a << endl;
-
 }
 
 
@@ -72,7 +65,7 @@ int getMin(int a, int b, int c){
   }
 }
 
-void greedySeam(Mat& image, Mat& output){
+void greedySeam(Mat& image, Mat& original, Mat& output){
   int height = image.rows;
   int width = image.cols;
   int array[height][width];
@@ -107,24 +100,14 @@ void greedySeam(Mat& image, Mat& output){
   }
   
 
- // for (int i = 0; i < height; i++){
- //   for (int j = 0; j < width; j++){
- //     if (path[i] == j){
- //       cout << "X" << "\t";
- //     }else{
- //       cout << array[i][j] << "\t";
- //     }
- //   }
- //   cout << endl;
- // }
 
 
   for (int i = 0; i < height; i++){
     for (int j = 0; j < width; j++){
       if (j >= path[i]){
-        output.at<float>(i, j) = image.at<float>(i, j + 1);
+        output.at<Vec3b>(i, j) = original.at<Vec3b>(i, j + 1);
       }else{
-        output.at<float>(i, j) = image.at<float>(i, j);
+        output.at<Vec3b>(i, j) = original.at<Vec3b>(i, j);
       }
     }
   }
@@ -135,44 +118,37 @@ void greedySeam(Mat& image, Mat& output){
 int main(int argc, char** argv){
   src = imread( argv[1], 1 );
 
-  if( argc != 2 || !src.data )
-  {
+  if( argc != 2 || !src.data ){
     printf( " No image data \n " );
     return -1;
   }
 
-  srcGray;
-  cvtColor( src, srcGray, CV_BGR2GRAY );
-  CannyThreshold(0,0);
-
   namedWindow( "Original Image", CV_WINDOW_AUTOSIZE );
-  namedWindow( "Gray Image", CV_WINDOW_AUTOSIZE );
-  namedWindow( "Blur Image", CV_WINDOW_AUTOSIZE );
-  namedWindow( "Edge Image", CV_WINDOW_AUTOSIZE );
-  namedWindow( "Color Edges", CV_WINDOW_AUTOSIZE );
-  namedWindow( "blob", CV_WINDOW_AUTOSIZE);
-
   imshow( "Original Image", src );
-  imshow( "Gray Image", srcGray );
-  imshow( "Blur Image", srcBlur );
-  imshow( "Edge Image", srcEdges );
-  imshow( "Color Edges", dst);
-  MatType(srcEdges);
-   
-  Mat fMat;
-  srcEdges.convertTo(fMat, CV_32F); 
-  MatType(fMat);
-  imshow( "blob", fMat);
- 
-  Mat output(fMat.rows, fMat.cols, CV_32F);
 
-  for (int i = 0; i < 100; i++){
-    greedySeam(fMat, output);
-    fMat = output;
+
+  for (int i = 0; i < 2; i++){
+    cvtColor( src, srcGray, CV_BGR2GRAY );
+    //Begin process of prepping image for edge detection
+    //Convert to grayscale, blur, and perform canny edge detection
+    blur( srcGray, srcBlur, Size(3,3) );
+    Canny( srcBlur, srcEdges, 40, 40*3, 3 );
+    //  dst = Scalar::all(0);
+    //  src.copyTo( dst, srcEdges);
+    //---------------------------------------------
+    //Convert edge detected image to hold only floating point values instead of rgb
+    srcEdges.convertTo(fMat, CV_32F); 
+    //---------------------------------------------
+
+    //Create new Mat object equal to fMat's size
+    Mat output(fMat.rows, fMat.cols, CV_8U);
+    greedySeam(fMat, src, output);
+    src = output;
+    
+    namedWindow("Finished", CV_WINDOW_AUTOSIZE);
+    imshow("Finished", src);
   }
 
-  namedWindow( "blob2", CV_WINDOW_AUTOSIZE);
-  imshow( "blob2", output);
 
   waitKey(0);
 
