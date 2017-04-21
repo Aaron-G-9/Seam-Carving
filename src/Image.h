@@ -81,7 +81,7 @@ class Image {
       https://en.wikipedia.org/wiki/Seam_carving#Algorithm
       This is one of the more reliable methods for carving (among my implementations)
     */
-    void dynamicSeam(){
+    void dynamicVertSeam(){
       Mat temp;
       edges.copyTo(temp);
 
@@ -129,6 +129,57 @@ class Image {
 
     }
 
+    /*A dynamic programming approach to seam carving as described in:
+      https://en.wikipedia.org/wiki/Seam_carving#Algorithm
+      This is one of the more reliable methods for carving (among my implementations)
+    */
+    void dynamicHorizSeam(){
+      Mat temp;
+      edges.copyTo(temp);
+
+      int height = temp.rows;
+      int width = temp.cols;
+      int array[height][width];
+      
+      seam.resize(width + 1);
+
+      int veryLarge = numeric_limits<int>::max();
+      //Creates 2D array of seams using dynamic programming methods
+      for (int colNum = 0; colNum < width; colNum++){
+        for (int rowNum = 0; rowNum < height; rowNum++){
+          if (rowNum == 0){
+            array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + min({veryLarge, array[rowNum][colNum -1], array[rowNum + 1][colNum - 1]}); 
+          }else if (rowNum == height -1){
+            array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + min({array[rowNum -1][colNum -1], array[rowNum][colNum -1], veryLarge}); 
+          }else{
+            array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + 
+              min({array[rowNum -1][colNum -1], array[rowNum][colNum - 1], array[rowNum + 1][colNum - 1]}); 
+          }
+        }
+      }
+
+      float minValue = numeric_limits<float>::max();
+      int minIndex = 0;
+      //Weird stuff might happen with .at(height) look here for segfaults
+      for (int rowNum = 0; rowNum < height; rowNum++){
+        if (array[rowNum][width] < minValue){
+          minValue = array[rowNum][width];
+          minIndex = rowNum;
+        }
+      }
+
+      seam.at(width) = minIndex;
+
+      //minIndex is still the colNum
+      
+      for (int colNum = width - 1; colNum >= 0; colNum--){
+        seam.at(colNum) = minIndex + getMin(array[minIndex - 1][colNum], array[minIndex][colNum], array[minIndex + 1][colNum]);
+        minIndex = seam.at(colNum);
+      }
+
+      temp.release();
+
+    }
     /*This function was initially going to take 10 random seams using a greedy algorithm
       appraoch, but as I got carried away, it basically takes a brute force approach to 
       seam carving. This isn't a very efficient or well-made algorithm, hence the bad
@@ -274,7 +325,7 @@ class Image {
       I've had drastically different outcomes depending on how I implement this. This is an issue I'll keep looking
       at
     */
-    void removeSeam(){
+    void removeVertSeam(){
       //Move all the pixels to the right of the seam, one pixel to the left
       
       for (int rowNum = 0; rowNum < src.rows; rowNum++){
@@ -294,6 +345,29 @@ class Image {
       imshow("REMOVED", src);
     }
 
+    /*This method actually removes the seam from the picture. Although one would think this was a simple method,
+      I've had drastically different outcomes depending on how I implement this. This is an issue I'll keep looking
+      at
+    */
+    void removeHorizSeam(){
+      //Move all the pixels to the right of the seam, one pixel to the left
+      
+      for (int colNum = 0; colNum < src.cols; colNum++){
+        for (int rowNum = 0; rowNum < src.rows -1; rowNum++){
+          if (seam.at(colNum) >= rowNum){
+            src.at<Vec3b>(rowNum, colNum) = src.at<Vec3b>(rowNum +1, colNum);
+          }else{
+            src.at<Vec3b>(rowNum, colNum) = src.at<Vec3b>(rowNum, colNum);
+          }
+        }
+      }
+
+      //Resize the image to remove the last column
+      src = src(Rect(0, 0, src.cols, src.rows -1)); 
+
+      namedWindow("REMOVED");
+      imshow("REMOVED", src);
+    }
     float getEdgeValue(int a, int b){
       return edges.at<float>(a, b);
     }

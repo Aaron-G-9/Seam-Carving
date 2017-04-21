@@ -22,20 +22,26 @@ int main(int argc, char** argv){
 
   bool userIsWrong = true;
 
-  int newWidth;
-  cout << "Enter new width for image" << endl;
-  cin >> newWidth;
+ // int newWidth;
+ // cout << "Enter new width for image" << endl;
+ // cin >> newWidth;
 
-  while (newWidth > original.cols){
-    cout << "Sorry, please enter a width smaller than " << original.cols << endl;
-    cin >> newWidth;
-  }
+ // while (newWidth > original.cols){
+ //   cout << "Sorry, please enter a width smaller than " << original.cols << endl;
+ //   cin >> newWidth;
+ // }
 
-  for (int i = 0; i < newWidth; i++){
+ // for (int i = 0; i < newWidth; i++){
+ //   picture.getSobelEnergy();
+ //   picture.dynamicVertSeam();
+ //   //picture.showSeam();
+ //   picture.removeVertSeam();
+ // }
+  for (int i = 0; i < 50; i++){
     picture.getSobelEnergy();
-    picture.dynamicSeam();
+    picture.dynamicHorizSeam();
     //picture.showSeam();
-    picture.removeSeam();
+    picture.removeHorizSeam();
   }
 
   waitKey(0);
