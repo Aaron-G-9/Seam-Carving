@@ -1,9 +1,9 @@
 #include <iostream>
+#include <algorithm>
 #include <limits>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include "opencv2/imgcodecs.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <fstream>
@@ -106,7 +106,7 @@ class Image {
       
       seam.resize(height + 1);
 
-      float veryLarge = numeric_limits<float>::max();
+      int veryLarge = numeric_limits<int>::max();
       //Creates 2D array of seams using dynamic programming methods
       for (int rowNum = 0; rowNum < height; rowNum++){
         for (int colNum = 0; colNum < width; colNum++){
@@ -114,12 +114,12 @@ class Image {
             array[0][colNum] = temp.at<float>(0, colNum);
           }else{
             if (colNum == 0){
-              array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + returnMin(veryLarge, temp.at<float>(rowNum -1, colNum), temp.at<float>(rowNum -1, colNum + 1)); 
+              array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + std::min({veryLarge, array[rowNum -1][colNum], array[rowNum -1][colNum + 1]}); 
             }else if (colNum == width -1){
-              array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + returnMin(temp.at<float>(rowNum -1, colNum -1), temp.at<float>(rowNum -1, colNum), veryLarge); 
+              array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + std::min({array[rowNum -1][colNum -1], array[rowNum -1][colNum], veryLarge}); 
             }else{
               array[rowNum][colNum] = temp.at<float>(rowNum, colNum) + 
-                returnMin(temp.at<float>(rowNum -1, colNum -1), temp.at<float>(rowNum -1, colNum), temp.at<float>(rowNum -1, colNum + 1)); 
+                std::min({array[rowNum -1][colNum -1], array[rowNum -1][colNum], array[rowNum -1][colNum + 1]}); 
             }
           }
         }
@@ -140,9 +140,17 @@ class Image {
       //minIndex is still the colNum
       
       for (int rowNum = height - 1; rowNum >= 0; rowNum--){
-        seam.at(rowNum) = minIndex + getMin(array[rowNum][minIndex - 1], array[rowNum][minIndex], array[rowNum][minIndex + 1]);
+        cout << rowNum << endl;
+        if (minIndex == 0){
+          seam.at(rowNum) = minIndex + getMin(numeric_limits<int>::max(), array[rowNum][minIndex], array[rowNum][minIndex + 1]);
+        }else if (minIndex == width){
+          seam.at(rowNum) = minIndex + getMin(array[rowNum][minIndex - 1], array[rowNum][minIndex], numeric_limits<int>::max());
+        }else{
+          seam.at(rowNum) = minIndex + getMin(array[rowNum][minIndex - 1], array[rowNum][minIndex], array[rowNum][minIndex + 1]);
+        }
         minIndex = seam.at(rowNum);
       }
+      
 
       temp.release();
 
@@ -331,8 +339,8 @@ int main(int argc, char** argv){
   for (int i = 0; i < 100; i++){
     picture.getEnergy();
     picture.dynamicSeam();
-    //picture.showSeam();
-    picture.removeSeam();
+    picture.showSeam();
+    //picture.removeSeam();
   }
 
   waitKey(0);
