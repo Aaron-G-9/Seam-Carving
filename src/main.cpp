@@ -20,24 +20,33 @@ int main(int argc, char** argv){
   imshow("ORIGINAL", original);
   Image picture(original);
 
-  bool userIsWrong = true;
+  int newWidth, newHeight;
+  cout << "Enter new width for image" << endl;
+  cin >> newWidth;
 
- // int newWidth;
- // cout << "Enter new width for image" << endl;
- // cin >> newWidth;
+  while (newWidth > original.cols){
+    cout << "Sorry, please enter a width smaller than " << original.cols << endl;
+    cin >> newWidth;
+  }
 
- // while (newWidth > original.cols){
- //   cout << "Sorry, please enter a width smaller than " << original.cols << endl;
- //   cin >> newWidth;
- // }
+  cout << "Enter new height for image" << endl;
+  cin >> newHeight;
 
- // for (int i = 0; i < newWidth; i++){
- //   picture.getSobelEnergy();
- //   picture.dynamicVertSeam();
- //   //picture.showSeam();
- //   picture.removeVertSeam();
- // }
-  for (int i = 0; i < 50; i++){
+  while (newHeight > original.rows){
+    cout << "Sorry, please enter a height smaller than " << original.rows << endl;
+    cin >> newHeight;
+  }
+
+  newWidth = original.cols - newWidth;
+  newHeight = original.rows - newHeight;
+
+  for (int i = 0; i < newWidth; i++){
+    picture.getSobelEnergy();
+    picture.dynamicVertSeam();
+    //picture.showSeam();
+    picture.removeVertSeam();
+  }
+  for (int i = 0; i < newHeight; i++){
     picture.getSobelEnergy();
     picture.dynamicHorizSeam();
     //picture.showSeam();
