@@ -8,7 +8,7 @@ This project was made for an intro C++ class, therefore it is by no means a perf
 An original, unaltered image:  
 ![Unaltered sea](https://github.com/Aaron-G-9/Seam-Carving/blob/master/pictures/sea-thai.jpg)  
 An example seam  
-![sea with seam](https://github.com/Aaron-G-9/Seam-Carving/blob/master/pictures/SEAM_sea.png) 
+![sea with seam](https://github.com/Aaron-G-9/Seam-Carving/blob/master/pictures/SEAM_sea.png)  
 That image now carved  
 ![carved sea](https://github.com/Aaron-G-9/Seam-Carving/blob/master/pictures/sea-carved.png) 
 
