@@ -1,5 +1,3 @@
 *.out
 *.swp
 build/
-*.jpg
-*.png
